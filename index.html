@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nonne.io</title>
+  <meta name="title" content="Nonne.io" />
+  <meta property="og:title" content="Nonne.io" />
+  <meta property="og:url" content="https://nonne.io/" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+ 
+  <style id="flickering-style">
+    @keyframes flickering {
+      0% { opacity: 0.63 }; 1% { opacity: 0.46 }; 2% { opacity: 0.95 }; 3% { opacity: 0.37 }; 4% { opacity: 0.78 }; 5% { opacity: 0.41 }; 6% { opacity: 1.14 }; 7% { opacity: 0.9 }; 8% { opacity: 0.43 }; 9% { opacity: 1.17 }; 10% { opacity: 0.48 }; 11% { opacity: 0.94 }; 12% { opacity: 0.91 }; 13% { opacity: 0.92 }; 14% { opacity: 0.86 }; 15% { opacity: 0.73 }; 16% { opacity: 0.76 }; 17% { opacity: 1.04 }; 18% { opacity: 0.42 }; 19% { opacity: 0.99 }; 20% { opacity: 0.53 }; 21% { opacity: 0.76 }; 22% { opacity: 1.12 }; 23% { opacity: 1.22 }; 24% { opacity: 0.79 }; 25% { opacity: 0.36 }; 26% { opacity: 0.8 }; 27% { opacity: 0.57 }; 28% { opacity: 1.28 }; 29% { opacity: 1.05 }; 30% { opacity: 0.38 }; 31% { opacity: 0.85 }; 32% { opacity: 1.23 }; 33% { opacity: 1.07 }; 34% { opacity: 0.41 }; 35% { opacity: 0.64 }; 36% { opacity: 0.4 }; 37% { opacity: 0.63 }; 38% { opacity: 0.97 }; 39% { opacity: 1.03 }; 40% { opacity: 0.84 }; 41% { opacity: 1.34 }; 42% { opacity: 0.78 }; 43% { opacity: 0.69 }; 44% { opacity: 1.17 }; 45% { opacity: 0.64 }; 46% { opacity: 1.04 }; 47% { opacity: 1.02 }; 48% { opacity: 0.65 }; 49% { opacity: undefined }; 50% { opacity: 1 }; 
+    }
+  </style>
+</head>
+
+<body> <canvas id="canvas"></canvas>
+
+  <div id="overlay">
+    <div class="main-panel">
+      <div id="logo">
+        <img src="images/letters/N.png" class="letter">
+        <img src="images/letters/O.png" class="letter" id="letter-o">
+        <img src="images/letters/N.png" class="letter" id="letter-n">
+        <img src="images/letters/N.png" class="letter">
+        <img src="images/letters/E.png" class="letter" id="letter-e">
+        <img src="images/letters/IO.png" class="letter">
+      </div>
+
+      <form id="playForm" novalidate>
+        <div class="form-group">
+
+          <div class="topGui">
+            <div id="nickInput">
+              <input id="nick" type="text" class="form-control input-nick" placeholder="Type a Nickname..." maxlength="16" autofocus />
+            </div>
+
+            <div class="spacer"><br /></div>
+
+            <button id="playButton" type="submit" class="btn-play btn-primary">
+              <span class="basic-text">PLAY</span>
+            </button>
+          </div>
+
+          <div id="topGuiConnecting" class="basic-text hidden">
+            <h3>Connecting...</h3>
+          </div>
+
+          <div id="roomFailed" class="hidden">
+            <div class="basic-text">
+              <h4>
+                <span id="linkText">SERVER IS FULL!</span><br />
+                CLICK CONTINUE TO JOIN ANOTHER SERVER.
+              </h4>
+            </div>
+
+            <button id="continueButton" type="button" class="btn btn-play btn-primary">
+              <span class="basic-text">CONTINUE</span>
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+  <script type="text/javascript" src="main.js"></script>
+</body>
+
+</html>
