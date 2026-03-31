@@ -33,6 +33,7 @@ nickInput.addEventListener('keydown', (e) => {
 });
 
 playButton.addEventListener('click', (e) => {
+    e.preventDefault();
     clickPlay(nickInput.value);
 });
 
@@ -54,4 +55,9 @@ function clickPlay(nick) {
     }
 }
 
-class Network {}
+class Network {
+    constructor() {
+        this.webSocket = null;
+        this.lastPing = null;
+    }
+}
