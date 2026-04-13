@@ -1,10 +1,4 @@
 let app;
-let debug = true;
-let screenWidth = window.innerWidth;
-let screenHeight = window.innerHeight;
-let visionPerc = 1.0;
-let focus = true;
-let localPlayerID = 0;
 
 function transform(buffer, k8, k32, pattern) {
     const data = new Uint8Array(buffer);
@@ -50,41 +44,18 @@ function transform(buffer, k8, k32, pattern) {
     return out.buffer;
 }
 
-function toggleFullScreen() {
-    if (!isFullscreen()) {
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
-        } else if (document.documentElement.msRequestFullscreen) {
-            document.documentElement.msRequestFullscreen();
-        } else if (document.documentElement.mozRequestFullScreen) {
-            document.documentElement.mozRequestFullScreen();
-        } else if (document.documentElement.webkitRequestFullscreen) {
-            document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-        }
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-            document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        }
-    }
-}
-
-function isFullscreen() {
-    return !(!document.fullscreenElement &&
-        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement);
-}
-
 class App {
     constructor() {
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext('2d');
 
+        this.debug = true;
+        this.focus = true;
+        this.myId = 0;
         this.gameScale = 10.0;
+		this.visionPerc = 1.0;
+        this.screenWidth = window.innerWidth;
+        this.screenHeight = window.innerHeight;
 
         this.ui = null;
         this.game = null;
@@ -102,6 +73,34 @@ class App {
         this.network.connect();
 
         this.input.addListeners();
+    }
+
+    toggleFullScreen() {
+        if (!this.isFullscreen()) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+    }
+    isFullscreen() {
+        return !(!document.fullscreenElement &&
+            !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement);
     }
 
     clickPlay(nick) {
@@ -124,8 +123,8 @@ class App {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
 
-        screenWidth = window.innerWidth;
-        screenHeight = window.innerHeight;
+        this.screenWidth = window.innerWidth;
+        this.screenHeight = window.innerHeight;
 
         if (this.network && this.network.hasConnection) {
             this.network.resize();
@@ -165,7 +164,7 @@ class Game {
     }
 
     updateLeaderboard(data) {}
-    
+
     updateMinimap(data) {}
 
     render() {
@@ -273,15 +272,15 @@ class Input {
         } else if (e.keyCode == 27) {
             app.ui.fadeIn();
         } else if (e.keyCode == 70) {
-            toggleFullScreen();
+            app.toggleFullScreen();
         }
     }
 
     keyup(e) {
         if (e.keyCode == 32) {
-            if(app && app.game.playing){
-				app.network.sendClick(0);
-			}
+            if (app && app.game.playing) {
+                app.network.sendClick(0);
+            }
         }
     }
 
@@ -294,11 +293,11 @@ class Input {
         document.addEventListener('keyup', (e) => this.keyup(e));
 
         window.addEventListener('focus', () => {
-            focus = true;
+            app.focus = true;
         });
 
         window.addEventListener('blur', () => {
-            focus = false;
+            app.focus = false;
         });
     }
 }
@@ -342,7 +341,7 @@ class Network {
             MAP: 0xA5,
             SERVER_FULL: 0xA6,
             KICK: 0xA7,
-            UPGRADE: 0xA,
+            UPGRADE: 0xA8,
 
             FLAG_FULL: 0x1,
             FLAG_PARTIAL: 0x2,
@@ -370,7 +369,7 @@ class Network {
             console.log('Connecting to ' + this.address + '...');
             this.webSocket = new WebSocket(this.address);
         } catch (e) {
-            if (debug)
+            if (app.debug)
                 console.log(e);
 
             return;
@@ -385,7 +384,7 @@ class Network {
     }
 
     socketOpen() {
-        if (debug)
+        if (app.debug)
             console.log('Connected!');
 
         this.hasConnection = true;
@@ -395,7 +394,7 @@ class Network {
     }
 
     socketClosed() {
-        if (debug)
+        if (app.debug)
             console.log('disconnected');
 
         this.hasConnection = false;
@@ -532,7 +531,7 @@ class Network {
         let buffer = new Packet(data);
         let opcode = buffer.u8();
 
-        if (debug) {
+        if (app.debug) {
             console.log('OP: ' + opcode);
         }
 
@@ -541,7 +540,7 @@ class Network {
                 let now = Date.now();
                 let pingTime = now - this.pingStart;
 
-                if (debug) {
+                if (app.debug) {
                     console.log('Ping: ' + pingTime);
                 }
 
@@ -551,13 +550,13 @@ class Network {
             }
 
             case this.OPCODES.ID: {
-                localPlayerID = buffer.u32();
+                app.myId = buffer.u32();
 
                 app.enteredGame();
 
-                if (debug) {
+                if (app.debug) {
                     console.log('Did enter game!');
-                    console.log('My ID: ' + localPlayerID);
+                    console.log('My ID: ' + app.myId);
                 }
 
                 break;
@@ -589,7 +588,7 @@ class Network {
             }
 
             case this.OPCODES.SERVER_FULL: {
-                if (debug) {
+                if (app.debug) {
                     console.log('Server full!');
                 }
 
@@ -597,7 +596,7 @@ class Network {
             }
 
             case this.OPCODES.KICK: {
-                if (debug) {
+                if (app.debug) {
                     console.log('Kicked');
                 }
 
@@ -626,7 +625,7 @@ class Network {
     }
 
     onError(e) {
-        if (debug) {
+        if (app.debug) {
             console.log('socket error: ' + e);
         }
     }
@@ -653,8 +652,8 @@ class Network {
 
         view.setUint8(0, this.OPCODES.INIT, true);
 
-        view.setUint16(1, screenWidth / app.gameScale * visionPerc, true);
-        view.setUint16(3, screenHeight / app.gameScale * visionPerc, true);
+        view.setUint16(1, app.screenWidth / app.gameScale * app.visionPerc, true);
+        view.setUint16(3, app.screenHeight / app.gameScale * app.visionPerc, true);
 
         if (this.usingEncryption) {
             buffer = transform(buffer, this.k8_s, this.k32_s, this.pattern);
@@ -697,7 +696,7 @@ class Network {
         if (throttle)
             flags |= 0x1;
 
-        if (!focus || app.ui.isVisible) {
+        if (!app.focus || app.ui.isVisible) {
             flags |= 0x2;
         }
 
@@ -730,8 +729,8 @@ class Network {
 
         view.setUint8(0, this.OPCODES.RESIZE, true);
 
-        view.setUint16(1, screenWidth / app.gameScale * visionPerc, true);
-        view.setUint16(3, screenHeight / app.gameScale * visionPerc, true);
+        view.setUint16(1, app.screenWidth / app.gameScale * app.visionPerc, true);
+        view.setUint16(3, app.screenHeight / app.gameScale * app.visionPerc, true);
 
         if (this.usingEncryption) {
             buffer = transform(buffer, this.k8_s, this.k32_s, this.pattern);
