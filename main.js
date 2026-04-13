@@ -492,7 +492,7 @@ class Network {
             };
         }
 
-        updateLeaderboard(data);
+        app.game.updateLeaderboard(data);
     }
 
     processMinimap(buffer) {
@@ -515,7 +515,7 @@ class Network {
             i++;
         }
 
-        updateMinimap(data);
+        app.game.updateMinimap(data);
     }
 
     processEvents(buffer) {}
