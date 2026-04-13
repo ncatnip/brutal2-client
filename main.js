@@ -17,6 +17,7 @@ class App {
         this.game = null;
         this.network = null;
         this.input = null;
+		this.localPlayer = null;
     }
 
     init() {
