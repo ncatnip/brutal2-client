@@ -1,4 +1,82 @@
-let app;
+var app;
+var now;
+var prevNow;
+
+class Ship {
+    constructor() {
+        this.killReason = KILL_REASON_LEFT_SCREEN;
+	    this.id = -1;
+	    this.x = 0;
+    	this.y = 0;
+	    this.prevX = 0;
+	    this.prevY = 0;
+	    this.origX = 0;
+	    this.origY = 0;
+	    this.dstX = 0;
+	    this.dstY = 0;
+	    this.transferEnergy = 0;
+	    this.energy = 0;
+	    this.angle = 0.0;
+	    this.origAngle = this.angle;
+	    this.dstAngle = this.angle;
+
+        this.chainSegments = [];
+
+	    this.flailX = 0;
+	    this.flailY = 0;
+	    this.flailPrevX = 0;
+	    this.flailPrevY = 0;
+	    this.flailOrigX = 0;
+	    this.flailOrigY = 0;
+	    this.flailDstX = 0;
+	    this.flailDstY = 0;
+	    this.flailAngle = 0.0;
+	    this.flailOrigAngle = this.flailAngle;
+	    this.flailDstAngle = this.flailAngle;
+	    this.flailRadius = 0;
+	    this.flailDstRadius = 0;
+
+        this.hue = 0;
+	    this.attached = true;
+	    this.attracting = false;
+	    this.invulnerable = false;
+	    this.shock = false;
+	    this.decay = false;
+	    this.still = false;
+	    this.inside = false;
+	    this.charging = false;
+
+	    this.flashFlailValue = 0;
+
+	    this.nick = '';
+
+	    this.lastUpdateTime;
+	    this.highlightTime = 0;
+	    this.highlightSin = 0;
+	    this.highlight = true;
+	    this.highlightValue = 250;
+
+        this.beingDeleted = false;
+	    this.shipScale = 1.0;
+
+        this.FLAGS = {
+            FLAIL_ATTACHED: 0x01,
+            FLAIL_ATTRACTING: 0x02,
+            INVULNERABLE: 0x04,
+            DECAY: 0x08,
+            CHARGING: 0x10
+        };
+
+        this.alpha = 1.0;
+        this.invulnerableBlinkDelay = 0.0;
+	    this.invulnerableBlinkInterval = 250;
+	    this.blinkState = false;
+	    this.flash = 0.0;
+	    this.flashTime = 200;
+        this.locatorValue = 0.0;
+	    this.decayEffect = 0;
+    }
+}
 
 class App {
     constructor() {
@@ -9,7 +87,7 @@ class App {
         this.focus = true;
         this.myId = 0;
         this.gameScale = 10.0;
-		this.visionPerc = 1.0;
+        this.visionPerc = 1.0;
         this.screenWidth = window.innerWidth;
         this.screenHeight = window.innerHeight;
 
@@ -17,7 +95,7 @@ class App {
         this.game = null;
         this.network = null;
         this.input = null;
-		this.localPlayer = null;
+        this.localPlayer = null;
     }
 
     init() {
@@ -30,34 +108,21 @@ class App {
         this.network.connect();
 
         this.input.addListeners();
-    }
 
-    toggleFullScreen() {
-        if (!this.isFullscreen()) {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            } else if (document.documentElement.msRequestFullscreen) {
-                document.documentElement.msRequestFullscreen();
-            } else if (document.documentElement.mozRequestFullScreen) {
-                document.documentElement.mozRequestFullScreen();
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-            }
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
+        function sendDirection() {
+            if (app.network && app.network.hasConnection) {
+                app.network.input(app.input.angle, app.input.throttle);
             }
         }
+
+        setInterval(sendDirection, 1000 / 30);
+
+        this.game.loop();
     }
-    isFullscreen() {
-        return !(!document.fullscreenElement &&
-            !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement);
+
+    update(dt) {
+        this.game.update(dt);
+        this.game.draw(this.ctx, dt);
     }
 
     clickPlay(nick) {
@@ -87,6 +152,35 @@ class App {
             this.network.resize();
         }
     }
+
+    toggleFullScreen() {
+        if (!this.isFullscreen()) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+    }
+
+    isFullscreen() {
+        return !(!document.fullscreenElement &&
+            !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement);
+    }
 }
 
 class Game {
@@ -105,32 +199,19 @@ class Game {
         this.playing = false;
     }
 
-    loop() {
-        if (!this.playing) return;
+    updateLeaderboard(data) { }
 
-        this.update();
-        this.render();
+    updateMinimap(data) { }
 
-        requestAnimationFrame(() => this.loop());
-    }
-
-    update() {
-        if (app.network && app.network.hasConnection) {
-            app.network.input(app.input.angle, app.input.throttle);
+    update(dt) {
+        for (let entity of this.entities.values()) {
+            entity.update(dt);
         }
     }
 
-    updateLeaderboard(data) {}
-
-    updateMinimap(data) {}
-
-    render() {
-        const ctx = app.ctx;
-
-        ctx.clearRect(0, 0, app.canvas.width, app.canvas.height);
-
+    draw(ctx, dt) {
         for (let entity of this.entities.values()) {
-            entity.draw(ctx);
+            entity.draw(ctx, dt);
         }
     }
 }
@@ -142,7 +223,9 @@ class UI {
 
         this.isVisible = true;
 
-        this.button.addEventListener('click', () => {
+        this.button.addEventListener('click', (e) => {
+            e.preventDefault();
+
             if (app) {
                 app.clickPlay(this.input.value);
             }
@@ -474,9 +557,9 @@ class Network {
         app.game.updateMinimap(data);
     }
 
-    processEvents(buffer) {}
+    processEvents(buffer) { }
 
-    processMap(buffer) {}
+    processMap(buffer) { }
 
     processMessage(event) {
         let data = event.data;
@@ -824,9 +907,25 @@ function transform(buffer, k8, k32, pattern) {
     return out.buffer;
 }
 
+function loop() {
+	now = +new Date();
+
+	var dt = 0;
+	if(prevNow > 0)
+		dt = now - prevNow;
+
+	prevNow = now;
+
+	app.update(dt);
+
+	if(window.requestAnimationFrame)
+		window.requestAnimationFrame(runLoop);
+}
+
 function init() {
     app = new App();
     app.init();
+    loop();
 }
 
 window.onresize = () => app.resize();
