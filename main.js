@@ -1,49 +1,5 @@
 let app;
 
-function transform(buffer, k8, k32, pattern) {
-    const data = new Uint8Array(buffer);
-    const out = new Uint8Array(data.length);
-
-    let i = 0;
-    let p = 0;
-
-    while (i < data.length) {
-        k8 = (k8 * 33) ^ 0xA5;
-        k8 &= 0xFF;
-
-        k32 = (k32 * 1664525 + 1013904223) >>> 0;
-
-        if (pattern[p % pattern.length] & 1) {
-            out[i] = data[i] ^ k8;
-            i += 1;
-        } else {
-            if (i + 4 <= data.length) {
-                let v =
-                    (data[i]) |
-                    (data[i + 1] << 8) |
-                    (data[i + 2] << 16) |
-                    (data[i + 3] << 24);
-
-                let x = (v ^ k32) >>> 0;
-
-                out[i] = x & 0xFF;
-                out[i + 1] = (x >>> 8) & 0xFF;
-                out[i + 2] = (x >>> 16) & 0xFF;
-                out[i + 3] = (x >>> 24) & 0xFF;
-
-                i += 4;
-            } else {
-                out[i] = data[i] ^ k8;
-                i += 1;
-            }
-        }
-
-        p++;
-    }
-
-    return out.buffer;
-}
-
 class App {
     constructor() {
         this.canvas = document.getElementById('canvas');
@@ -821,6 +777,50 @@ class Packet {
 
         return finishedString;
     }
+}
+
+function transform(buffer, k8, k32, pattern) {
+    const data = new Uint8Array(buffer);
+    const out = new Uint8Array(data.length);
+
+    let i = 0;
+    let p = 0;
+
+    while (i < data.length) {
+        k8 = (k8 * 33) ^ 0xA5;
+        k8 &= 0xFF;
+
+        k32 = (k32 * 1664525 + 1013904223) >>> 0;
+
+        if (pattern[p % pattern.length] & 1) {
+            out[i] = data[i] ^ k8;
+            i += 1;
+        } else {
+            if (i + 4 <= data.length) {
+                let v =
+                    (data[i]) |
+                    (data[i + 1] << 8) |
+                    (data[i + 2] << 16) |
+                    (data[i + 3] << 24);
+
+                let x = (v ^ k32) >>> 0;
+
+                out[i] = x & 0xFF;
+                out[i + 1] = (x >>> 8) & 0xFF;
+                out[i + 2] = (x >>> 16) & 0xFF;
+                out[i + 3] = (x >>> 24) & 0xFF;
+
+                i += 4;
+            } else {
+                out[i] = data[i] ^ k8;
+                i += 1;
+            }
+        }
+
+        p++;
+    }
+
+    return out.buffer;
 }
 
 function init() {
